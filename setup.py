@@ -45,26 +45,11 @@ def readme():
         return f.read()
 
 
-extras = {
-    "geography": ["GeoAlchemy2", "shapely"],
-    "alembic": ["alembic"],
-    "tests": ["packaging", "pytz"],
-    # Keep the no-op bqstorage extra for backward compatibility.
-    # See: https://github.com/googleapis/python-bigquery/issues/757
-    "bqstorage": [
-        "google-cloud-bigquery-storage >= 2.0.0, <3.0.0dev",
-        # Due to an issue in pip's dependency resolver, the `grpc` extra is not
-        # installed, even though `google-cloud-bigquery-storage` specifies it
-        # as `google-api-core[grpc]`. We thus need to explicitly specify it here.
-        # See: https://github.com/googleapis/python-bigquery/issues/83 The
-        # grpc.Channel.close() method isn't added until 1.32.0.
-        # https://github.com/grpc/grpc/pull/15254
-        "grpcio >= 1.47.0, < 2.0dev",
-        "grpcio >= 1.49.1, < 2.0dev; python_version>='3.11'",
-        "pyarrow >= 3.0.0",
-    ],
-}
-
+extras = dict(
+    geography=["GeoAlchemy2", "shapely"],
+    alembic=["alembic"],
+    tests=["packaging", "pytz"],
+)
 extras["all"] = set(itertools.chain.from_iterable(extras.values()))
 
 setup(
@@ -84,10 +69,11 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
         "Operating System :: OS Independent",
         "Topic :: Database :: Front-Ends",
     ],
@@ -99,11 +85,18 @@ setup(
         # https://github.com/googleapis/google-cloud-python/issues/10566
         "google-auth>=1.25.0,<3.0.0dev",  # Work around pip wack.
         "google-cloud-bigquery>=2.25.2,<4.0.0dev",
-        "packaging",
-        "sqlalchemy>=1.2.0,<2.0.0dev",
+        "google-cloud-bigquery-storage>=2.0.0,<3.0.0dev",
+        "pyarrow>=3.0.0,<7.0dev",
+        # Temporarily set maximimum sqlalchemy to a known-working version while
+        # we debug failing compliance tests. See:
+        # https://github.com/googleapis/python-bigquery-sqlalchemy/issues/386
+        # and
+        # https://github.com/googleapis/python-bigquery-sqlalchemy/issues/385
+        "sqlalchemy>=1.2.0,<=1.4.27",
+        "future",
     ],
     extras_require=extras,
-    python_requires=">=3.8, <3.12",
+    python_requires=">=3.6, <3.11",
     tests_require=["packaging", "pytz"],
     entry_points={
         "sqlalchemy.dialects": ["bigquery = sqlalchemy_bigquery:BigQueryDialect"]

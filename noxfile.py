@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2023 Google LLC
+# Copyright 2018 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,20 +20,18 @@ from __future__ import absolute_import
 import os
 import pathlib
 import re
-import re
 import shutil
 import warnings
 
 import nox
 
-FLAKE8_VERSION = "flake8==6.1.0"
 BLACK_VERSION = "black==22.3.0"
 ISORT_VERSION = "isort==5.10.1"
 LINT_PATHS = ["docs", "sqlalchemy_bigquery", "tests", "noxfile.py", "setup.py"]
 
 DEFAULT_PYTHON_VERSION = "3.8"
 
-UNIT_TEST_PYTHON_VERSIONS = ["3.8", "3.9", "3.10", "3.11"]
+UNIT_TEST_PYTHON_VERSIONS = ["3.6", "3.7", "3.8", "3.9", "3.10"]
 UNIT_TEST_STANDARD_DEPENDENCIES = [
     "mock",
     "asyncmock",
@@ -51,16 +49,16 @@ UNIT_TEST_EXTRAS_BY_PYTHON = {
     "3.8": [
         "tests",
         "alembic",
-        "bqstorage",
     ],
-    "3.11": [
+    "3.10": [
         "tests",
         "geography",
-        "bqstorage",
     ],
 }
 
-SYSTEM_TEST_PYTHON_VERSIONS = ["3.8", "3.11"]
+
+# We're using two Python versions to test with sqlalchemy 1.3 and 1.4.
+SYSTEM_TEST_PYTHON_VERSIONS = ["3.8", "3.10"]
 SYSTEM_TEST_STANDARD_DEPENDENCIES = [
     "mock",
     "pytest",
@@ -76,12 +74,10 @@ SYSTEM_TEST_EXTRAS_BY_PYTHON = {
     "3.8": [
         "tests",
         "alembic",
-        "bqstorage",
     ],
-    "3.11": [
+    "3.10": [
         "tests",
         "geography",
-        "bqstorage",
     ],
 }
 
@@ -110,7 +106,7 @@ def lint(session):
     Returns a failure if the linters find linting errors or sufficiently
     serious code quality issues.
     """
-    session.install(FLAKE8_VERSION, BLACK_VERSION)
+    session.install("flake8", BLACK_VERSION)
     session.run(
         "black",
         "--check",
@@ -184,21 +180,13 @@ def install_unittest_dependencies(session, *constraints):
         session.install("-e", ".", *constraints)
 
 
-def default(session, install_extras=True):
+def default(session):
     # Install all test dependencies, then install this package in-place.
 
     constraints_path = str(
         CURRENT_DIRECTORY / "testing" / f"constraints-{session.python}.txt"
     )
     install_unittest_dependencies(session, "-c", constraints_path)
-
-    if install_extras and session.python == "3.11":
-        install_target = ".[geography,alembic,tests,bqstorage]"
-    elif install_extras:
-        install_target = ".[all]"
-    else:
-        install_target = "."
-    session.install("-e", install_target, "-c", constraints_path)
 
     # Run py.test against the unit tests.
     session.run(
@@ -225,9 +213,7 @@ def unit(session):
 def install_systemtest_dependencies(session, *constraints):
 
     # Use pre-release gRPC for system tests.
-    # Exclude version 1.52.0rc1 which has a known issue.
-    # See https://github.com/grpc/grpc/issues/32163
-    session.install("--pre", "grpcio!=1.52.0rc1")
+    session.install("--pre", "grpcio")
 
     session.install(*SYSTEM_TEST_STANDARD_DEPENDENCIES, *constraints)
 
@@ -296,49 +282,74 @@ def system(session):
         )
 
 
-@nox.session(python=SYSTEM_TEST_PYTHON_VERSIONS)
-def system_noextras(session):
-    """Run the system test suite."""
-    constraints_path = str(
-        CURRENT_DIRECTORY / "testing" / f"constraints-{session.python}.txt"
+@nox.session(python=DEFAULT_PYTHON_VERSION)
+def prerelease(session):
+    session.install(
+        "--prefer-binary",
+        "--pre",
+        "--upgrade",
+        "alembic",
+        "geoalchemy2",
+        "google-api-core",
+        "google-cloud-bigquery",
+        "google-cloud-bigquery-storage",
+        "sqlalchemy",
+        "shapely",
+        # These are transitive dependencies, but we'd still like to know if a
+        # change in a prerelease there breaks this connector.
+        "google-cloud-core",
+        "grpcio",
     )
-    system_test_path = os.path.join("tests", "system.py")
-    system_test_folder_path = os.path.join("tests", "system")
+    session.install(
+        "freezegun",
+        "google-cloud-testutils",
+        "mock",
+        "psutil",
+        "pytest",
+        "pytest-cov",
+        "pytz",
+    )
 
-    # Check the value of `RUN_SYSTEM_TESTS` env var. It defaults to true.
-    if os.environ.get("RUN_SYSTEM_TESTS", "true") == "false":
-        session.skip("RUN_SYSTEM_TESTS is set to false, skipping")
-    # Install pyopenssl for mTLS testing.
-    if os.environ.get("GOOGLE_API_USE_CLIENT_CERTIFICATE", "false") == "true":
-        session.install("pyopenssl")
+    # Because we test minimum dependency versions on the minimum Python
+    # version, the first version we test with in the unit tests sessions has a
+    # constraints file containing all dependencies and extras.
+    with open(
+        CURRENT_DIRECTORY
+        / "testing"
+        / f"constraints-{UNIT_TEST_PYTHON_VERSIONS[0]}.txt",
+        encoding="utf-8",
+    ) as constraints_file:
+        constraints_text = constraints_file.read()
 
-    system_test_exists = os.path.exists(system_test_path)
-    system_test_folder_exists = os.path.exists(system_test_folder_path)
-    # Sanity check: only run tests if found.
-    if not system_test_exists and not system_test_folder_exists:
-        session.skip("System tests were not found")
-
-    global SYSTEM_TEST_EXTRAS_BY_PYTHON
-    SYSTEM_TEST_EXTRAS_BY_PYTHON = False
-    install_systemtest_dependencies(session, "-c", constraints_path)
-
-    # Run py.test against the system tests.
-    if system_test_exists:
-        session.run(
-            "py.test",
-            "--quiet",
-            f"--junitxml=system_{session.python}_sponge_log.xml",
-            system_test_path,
-            *session.posargs,
+    # Ignore leading whitespace and comment lines.
+    deps = [
+        match.group(1)
+        for match in re.finditer(
+            r"^\s*(\S+)(?===\S+)", constraints_text, flags=re.MULTILINE
         )
-    if system_test_folder_exists:
-        session.run(
-            "py.test",
-            "--quiet",
-            f"--junitxml=system_{session.python}_sponge_log.xml",
-            system_test_folder_path,
-            *session.posargs,
-        )
+    ]
+
+    # We use --no-deps to ensure that pre-release versions aren't overwritten
+    # by the version ranges in setup.py.
+    session.install(*deps)
+    session.install("--no-deps", "-e", ".")
+
+    # Print out prerelease package versions.
+    session.run("python", "-m", "pip", "freeze")
+
+    # Run all tests, except a few samples tests which require extra dependencies.
+    session.run(
+        "py.test",
+        "--quiet",
+        f"--junitxml=prerelease_unit_{session.python}_sponge_log.xml",
+        os.path.join("tests", "unit"),
+    )
+    session.run(
+        "py.test",
+        "--quiet",
+        f"--junitxml=prerelease_system_{session.python}_sponge_log.xml",
+        os.path.join("tests", "system"),
+    )
 
 
 @nox.session(python=SYSTEM_TEST_PYTHON_VERSIONS[-1])
@@ -357,10 +368,12 @@ def compliance(session):
         session.skip("Compliance tests were not found")
 
     session.install("--pre", "grpcio")
-    session.install("--pre", "--no-deps", "--upgrade", "sqlalchemy<2.0.0")
+
     session.install(
         "mock",
-        "pytest",
+        # TODO: Allow latest version of pytest once SQLAlchemy 1.4.28+ is supported.
+        # See: https://github.com/googleapis/python-bigquery-sqlalchemy/issues/413
+        "pytest<=7.0.0dev",
         "pytest-rerunfailures",
         "google-cloud-testutils",
         "-c",
@@ -368,13 +381,11 @@ def compliance(session):
     )
     if session.python == "3.8":
         extras = "[tests,alembic]"
-    elif session.python == "3.11":
+    elif session.python == "3.10":
         extras = "[tests,geography]"
     else:
         extras = "[tests]"
     session.install("-e", f".{extras}", "-c", constraints_path)
-
-    session.run("python", "-m", "pip", "freeze")
 
     session.run(
         "py.test",
@@ -388,11 +399,6 @@ def compliance(session):
         "--only-rerun=400 Cannot execute DML over a non-existent table",
         system_test_folder_path,
         *session.posargs,
-        # To suppress the "Deprecated API features detected!" warning when
-        # features not compatible with 2.0 are detected, use a value of "1"
-        env={
-            "SQLALCHEMY_SILENCE_UBER_WARNING": "1",
-        },
     )
 
 
@@ -409,17 +415,13 @@ def cover(session):
     session.run("coverage", "erase")
 
 
-@nox.session(python="3.9")
+@nox.session(python=DEFAULT_PYTHON_VERSION)
 def docs(session):
     """Build the docs for this library."""
 
     session.install("-e", ".")
     session.install(
-        "sphinx==4.0.1",
-        "alabaster",
-        "geoalchemy2",
-        "shapely",
-        "recommonmark",
+        "sphinx==4.0.1", "alabaster", "geoalchemy2", "shapely", "recommonmark"
     )
 
     shutil.rmtree(os.path.join("docs", "_build"), ignore_errors=True)
@@ -437,17 +439,18 @@ def docs(session):
     )
 
 
-@nox.session(python="3.9")
+@nox.session(python=DEFAULT_PYTHON_VERSION)
 def docfx(session):
     """Build the docfx yaml files for this library."""
 
     session.install("-e", ".")
     session.install(
-        "gcp-sphinx-docfx-yaml",
+        "sphinx==4.0.1",
         "alabaster",
         "geoalchemy2",
         "shapely",
         "recommonmark",
+        "gcp-sphinx-docfx-yaml",
     )
 
     shutil.rmtree(os.path.join("docs", "_build"), ignore_errors=True)
@@ -474,94 +477,3 @@ def docfx(session):
         os.path.join("docs", ""),
         os.path.join("docs", "_build", "html", ""),
     )
-
-
-@nox.session(python=SYSTEM_TEST_PYTHON_VERSIONS)
-def prerelease_deps(session):
-    """Run all tests with prerelease versions of dependencies installed."""
-
-    # Install all dependencies
-    session.install("-e", ".[all, tests, tracing]")
-    unit_deps_all = UNIT_TEST_STANDARD_DEPENDENCIES + UNIT_TEST_EXTERNAL_DEPENDENCIES
-    session.install(*unit_deps_all)
-    system_deps_all = (
-        SYSTEM_TEST_STANDARD_DEPENDENCIES + SYSTEM_TEST_EXTERNAL_DEPENDENCIES
-    )
-    session.install(*system_deps_all)
-
-    # Because we test minimum dependency versions on the minimum Python
-    # version, the first version we test with in the unit tests sessions has a
-    # constraints file containing all dependencies and extras.
-    with open(
-        CURRENT_DIRECTORY
-        / "testing"
-        / f"constraints-{UNIT_TEST_PYTHON_VERSIONS[0]}.txt",
-        encoding="utf-8",
-    ) as constraints_file:
-        constraints_text = constraints_file.read()
-
-    # Ignore leading whitespace and comment lines.
-    constraints_deps = [
-        match.group(1)
-        for match in re.finditer(
-            r"^\s*(\S+)(?===\S+)", constraints_text, flags=re.MULTILINE
-        )
-    ]
-
-    session.install(*constraints_deps)
-
-    prerel_deps = [
-        "protobuf",
-        "sqlalchemy<2.0.0",
-        # dependency of grpc
-        "six",
-        "googleapis-common-protos",
-        # Exclude version 1.52.0rc1 which has a known issue. See https://github.com/grpc/grpc/issues/32163
-        "grpcio!=1.52.0rc1",
-        "grpcio-status",
-        "google-api-core",
-        "google-auth",
-        "proto-plus",
-        "google-cloud-testutils",
-        # dependencies of google-cloud-testutils"
-        "click",
-    ]
-
-    for dep in prerel_deps:
-        session.install("--pre", "--no-deps", "--upgrade", dep)
-
-    # Remaining dependencies
-    other_deps = [
-        "requests",
-    ]
-    session.install(*other_deps)
-
-    # Print out prerelease package versions
-    session.run(
-        "python", "-c", "import google.protobuf; print(google.protobuf.__version__)"
-    )
-    session.run("python", "-c", "import grpc; print(grpc.__version__)")
-    session.run("python", "-c", "import google.auth; print(google.auth.__version__)")
-
-    session.run("py.test", "tests/unit")
-
-    system_test_path = os.path.join("tests", "system.py")
-    system_test_folder_path = os.path.join("tests", "system")
-
-    # Only run system tests if found.
-    if os.path.exists(system_test_path):
-        session.run(
-            "py.test",
-            "--verbose",
-            f"--junitxml=system_{session.python}_sponge_log.xml",
-            system_test_path,
-            *session.posargs,
-        )
-    if os.path.exists(system_test_folder_path):
-        session.run(
-            "py.test",
-            "--verbose",
-            f"--junitxml=system_{session.python}_sponge_log.xml",
-            system_test_folder_path,
-            *session.posargs,
-        )

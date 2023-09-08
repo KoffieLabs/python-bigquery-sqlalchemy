@@ -20,9 +20,9 @@
 SQLAlchemy dialect for Google BigQuery
 """
 
-from .version import __version__
+from .version import __version__  # noqa
 
-from .base import BigQueryDialect, dialect
+from .base import BigQueryDialect, dialect  # noqa
 from ._types import (
     ARRAY,
     BIGNUMERIC,
@@ -44,8 +44,6 @@ from ._types import (
 )
 
 __all__ = [
-    "__version__",
-    "dialect",
     "ARRAY",
     "BIGNUMERIC",
     "BigQueryDialect",
@@ -68,7 +66,7 @@ __all__ = [
 
 try:
     from .geography import GEOGRAPHY, WKB, WKT  # noqa
-except ImportError:  # pragma: NO COVER
+except ImportError:
     pass
 else:
     __all__.extend(["GEOGRAPHY", "WKB", "WKT"])

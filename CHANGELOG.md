@@ -14,84 +14,14 @@ Older versions of this project were distributed as [pybigquery][0].
 [2]: https://pypi.org/project/pybigquery/#history
 
 
-## [1.8.0](https://github.com/googleapis/python-bigquery-sqlalchemy/compare/v1.7.0...v1.8.0) (2023-08-11)
-
-
-### Features
-
-* Remove illegal character check ([#892](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/892)) ([3328d0a](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/3328d0a69654e5c30af06359185170f7937d978b))
-
-## [1.7.0](https://github.com/googleapis/python-bigquery-sqlalchemy/compare/v1.6.1...v1.7.0) (2023-07-11)
-
-
-### Features
-
-* Added regexp_match operator support for bigquery ([#511](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/511)) ([fd78093](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/fd780938ca4a0d32448ed666753360f05584d2ab))
-* Remove pyarrow and bqstorage as dependencies ([#847](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/847)) ([5d6b38c](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/5d6b38c94dfef0bd0dbf5037ad21a352d2bd8e4f))
-
-
-### Bug Fixes
-
-* Avoid aliasing known CTEs ([#839](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/839)) ([8a1f694](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/8a1f694e59f5bac5ce66d9f8a04066980d7f9893))
-* Ensure correct alter table alter column statement is generated on data type changes in alembic ([#845](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/845)) ([493430a](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/493430a58914dc89fa5c16ea2127e4bed58bd0bf))
-* Remove "future" dependency ([#542](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/542)) ([ba5e244](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/ba5e24487e798fd77e7db93321c374a9196293f4))
-* Remove type annotations from _struct.py ([#733](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/733)) ([27814df](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/27814dfbea8267d1b7abbc47fbbb56bb36f3585d))
-
-
-### Documentation
-
-* Pass credentials as python dictionary ([#737](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/737)) ([074321d](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/074321ddaa10001773e7e6044f4a0df1bb530331))
-
-## [1.6.1](https://github.com/googleapis/python-bigquery-sqlalchemy/compare/v1.6.0...v1.6.1) (2023-02-01)
-
-
-### Bug Fixes
-
-* Ensure repo install ([#741](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/741)) ([75ef9ac](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/75ef9ac9dc1e806f3b2ef34208156c1a311750bc))
-
-## [1.6.0](https://github.com/googleapis/python-bigquery-sqlalchemy/compare/v1.5.0...v1.6.0) (2023-01-30)
-
-
-### Features
-
-* Enable support and testing for python 3.11 ([#512](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/512)) ([f826d83](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/f826d83bb2560ad82fb6d83bbb87ed89fac513f8))
-
-
-### Bug Fixes
-
-* Avoid sqlalchemy20 ([#736](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/736)) ([0675b1e](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/0675b1efb8f3adf88e800b2de660abe13fe39b25))
-
-## [1.5.0](https://github.com/googleapis/python-bigquery-sqlalchemy/compare/v1.4.4...v1.5.0) (2022-11-29)
-
-
-### Features
-
-* Allow Users to Supply Their Own BigQuery Client ([#474](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/474)) ([4f72d4e](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/4f72d4eb12fe986c2bae1bb1884a4ef5e78c95bc))
-
-
-### Bug Fixes
-
-* **deps:** Allow pyarrow version 7+ ([#479](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/479)) ([0f6be67](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/0f6be6712d5b89b14160cad3440d0bc1308dd5e5))
-* Require python 3.7+ ([#468](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/468)) ([52ec808](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/52ec80849b574edd2827df345c0085f3c68dc39d))
-* Sets cache support to false, removes upper req limit ([#499](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/499)) ([be63adc](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/be63adc345a3bfcd199c758e45e7d2c7036c4bab))
-* Updates test to account for UTC in failing test ([#501](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/501)) ([a050ccf](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/a050ccf534fe8e6d2135818474868f072212aa6f))
-* Use packaging version parser instead of string splitting ([#513](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/513)) ([bb7f6a7](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/bb7f6a78c1b7d738ab31a6a6d5112ab6e888c6aa))
-
-## [1.4.4](https://github.com/googleapis/python-bigquery-sqlalchemy/compare/v1.4.3...v1.4.4) (2022-06-03)
-
-
-### Documentation
-
-* fix changelog header to consistent size ([#461](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/461)) ([177e70a](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/177e70afb79420541021895fd0a082beb1704cf4))
-
-## [1.4.3](https://github.com/googleapis/python-bigquery-sqlalchemy/compare/v1.4.2...v1.4.3) (2022-03-22)
+### [1.4.3](https://github.com/googleapis/python-bigquery-sqlalchemy/compare/v1.4.2...v1.4.3) (2022-03-22)
 
 
 ### Bug Fixes
 
 * correct license text from Apache to MIT ([#436](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/436)) ([dbf7501](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/dbf7501c26157d3776f5a68254898758ee43a667))
 
-## [1.4.2](https://github.com/googleapis/python-bigquery-sqlalchemy/compare/v1.4.1...v1.4.2) (2022-03-22)
+### [1.4.2](https://github.com/googleapis/python-bigquery-sqlalchemy/compare/v1.4.1...v1.4.2) (2022-03-22)
 
 
 ### Bug Fixes
@@ -104,7 +34,7 @@ Older versions of this project were distributed as [pybigquery][0].
 
 * require google-cloud-bigquery-storage to avoid performance warning ([#414](https://github.com/googleapis/python-bigquery-sqlalchemy/issues/414)) ([ff3273f](https://github.com/googleapis/python-bigquery-sqlalchemy/commit/ff3273feacfa1f34bb9090f28f11c2ac470759fc))
 
-## [1.4.1](https://github.com/googleapis/python-bigquery-sqlalchemy/compare/v1.4.0...v1.4.1) (2022-03-07)
+### [1.4.1](https://github.com/googleapis/python-bigquery-sqlalchemy/compare/v1.4.0...v1.4.1) (2022-03-07)
 
 
 ### Bug Fixes
@@ -130,14 +60,14 @@ Older versions of this project were distributed as [pybigquery][0].
 
 * Enable support for 3.10 ([#381](https://www.github.com/googleapis/python-bigquery-sqlalchemy/issues/381)) ([4b3505b](https://www.github.com/googleapis/python-bigquery-sqlalchemy/commit/4b3505b3d3a4293ea127fc3c483e3e7de04fbd04))
 
-## [1.2.2](https://www.github.com/googleapis/python-bigquery-sqlalchemy/compare/v1.2.1...v1.2.2) (2021-10-29)
+### [1.2.2](https://www.github.com/googleapis/python-bigquery-sqlalchemy/compare/v1.2.1...v1.2.2) (2021-10-29)
 
 
 ### Bug Fixes
 
 * avoid aliasing known tables used in CTEs ([#369](https://www.github.com/googleapis/python-bigquery-sqlalchemy/issues/369)) ([4b05d21](https://www.github.com/googleapis/python-bigquery-sqlalchemy/commit/4b05d21b8dc89339a69df87183f8893bf02459c5))
 
-## [1.2.1](https://www.github.com/googleapis/python-bigquery-sqlalchemy/compare/v1.2.0...v1.2.1) (2021-10-27)
+### [1.2.1](https://www.github.com/googleapis/python-bigquery-sqlalchemy/compare/v1.2.0...v1.2.1) (2021-10-27)
 
 
 ### Bug Fixes
